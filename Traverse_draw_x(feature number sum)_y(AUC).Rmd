@@ -1,0 +1,99 @@
+
+
+```{r}
+rand.list=list()
+rand.sum=0
+rand.ave=data.frame()
+i=4
+rand=as.data.frame(combn(1:11,i))
+
+  for (j in 1:ncol(rand)){
+    #rand<-sample(3:60,i,replace=FALSE)
+    data.rand=cbind(topdata[,1:2],topdata[,rand[1:i,j]+2])
+    
+    model.topn.rand<-plsda(data.rand[1:nrow(data.rand),3:ncol(data.rand)],data.rand[1:nrow(data.rand),2],ncomp=2)
+    predict.model.rand<-predict(model.topn.rand,newdata=data.rand[1:nrow(data.rand),3:ncol(data.rand)])
+    
+    prob.num1<-as.numeric(sqrt(predict.model.rand$predict[,1,1]^2+predict.model.rand$predict[,1,2]^2))
+    prob.num2<-as.numeric(sqrt(predict.model.rand$predict[,2,1]^2+predict.model.rand$predict[,2,2]^2))
+    
+    prob.bin.rand<-matrix(0,length(prob.num1),1)
+    prob.bin.rand[prob.num1<prob.num2,]=1
+    roc.model<-quietroc(topdata[,2],prob.bin.rand)
+    im.total.rand=as.numeric(roc.model[["result"]][["auc"]])
+    rand[i+1,j]=im.total.rand
+    print(paste("running on ",j," rands of subset",sep=""))
+  }
+randt=t(rand)
+#write.csv(randt,"rand 10 out of 18.csv")
+```
+```{r}
+rand.draw=data.frame()
+rand.draw[1:nrow(randt),1]=as.data.frame(apply(randt[1:nrow(randt),1:i],1,sum))
+rand.draw[1:nrow(randt),2]=randt[1:nrow(randt),i+1]  
+colnames(rand.draw)=c("V1","V2")
+```
+
+```{r}
+p3=plot_ly(x=rand.draw$V1,y=rand.draw$V2,, type="scatter",marker=list(color="DABF80",size=10),name="The average of random m features")%>%#F5D363
+layout(xaxis = list(title = 'Sum of feature#',
+                    showgrid = F, 
+                    showline = T,
+                    mirror = "ticks",
+                    linecolor = toRGB("gray"),
+                    linewidth = 1,
+                    range = c(119, 166)),
+       yaxis = list(title = 'Area Under Curve(AUC)',
+                    showgrid = F, 
+                    showline = T,
+                    mirror = "ticks",
+                    linecolor = toRGB("gray"),
+                    linewidth = 1,
+                    range = c(0.73, 0.92)))
+
+```
+
+```{r}
+toptopdata=topdata[,(randt[which.max(randt[,i+1]),1:i])+2]
+toptopdata=cbind(topdata[,1:2],toptopdata)
+write.csv(toptopdata,"22younger vs 42older_1_5-18.csv")
+```
+```{r}
+data.path="~/OneDrive - The Ohio State University/Rui Xu-Research/Bourbon study II 2021S-/Data Archive"
+data.folder="LC pos Features CV0.3 SN3 INT10000 22younger vs 42older"
+data.file="LC pos Features CV0.3 SN3 INT10000 4younger vs 4older"
+extradata= read.csv(paste(data.path,"/",data.folder,"/",data.file,".csv",sep=""))
+topextradata=extradata[,colnames(extradata)%in%ave.vip.top$V1]
+toptopextradata=topextradata[,randt[which.max(randt[,i+1]),1:i]]
+toptopextradata=cbind(extradata[,1:2],toptopextradata)
+write.csv(toptopextradata,"4younger vs 4older_1_5-18.csv")
+```
+
+
+
+not in use
+```{r}
+
+library(ggpp)
+size=15
+P=ggplot(rand.draw, aes(V1,V2)) +
+geom_point(color = "blue",size = 3)+
+#geom_smooth(formula = y ~ x,method = lm)+
+#stat_poly_eq(aes(label = paste(..eq.label.., ..adj.rr.label.., sep = '~~~~')),formula = y ~ x,  parse = TRUE,size = 6,label.x = 0.1,label.y = 0.05)+
+#geom_line(aes(y=topn.im.total),linetype="dashed",colour="red",size=1)+
+theme_classic()+
+theme(
+  axis.text.x = element_text(face="bold", color="#000000", size=size, angle=0,vjust=0.5),
+  axis.text.y = element_text(face="bold", color="#000000", size=size, angle=0),
+  axis.title.x = element_text(face="bold", color="#000000", size=size, angle=0),
+  axis.title.y = element_text(face="bold", color="#000000", size=size, angle=90),
+  legend.title = element_text(face="bold", color="#000000", size=size),
+  legend.text = element_text(face="bold", color="#000000", size=size),
+  legend.position="top")+
+  labs(x ="Sum of the ranking number", y = "Area under curve(AUC)")
+```
+
+```{r}
+ggsave("8 features all.regression.jpg", plot = P,width = 8,height = 6)
+```
+

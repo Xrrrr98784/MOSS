@@ -1,0 +1,61 @@
+```{r}
+file.name="~/OneDrive - The Ohio State University/Rui Xu-Research/Bourbon study II 2021S-/Data Archive/LC pos Features CV0.3 SN3 INT10000 22younger vs 42older/22younger vs 42older_1_5-18"
+
+data= read.csv(paste(file.name,".csv",sep=""))
+file.name="~/OneDrive - The Ohio State University/Rui Xu-Research/Bourbon study II 2021S-/Data Archive/LC pos Features CV0.3 SN3 INT10000 22younger vs 42older/4younger vs 4older_1_5-18"
+
+valid=read.csv(paste(file.name,".csv",sep=""))
+library(mixOmics)
+plsda.model.topn<-plsda(data[,3:ncol(data)],as.factor(data[,2]),ncomp=2)
+predict.model<-predict(plsda.model.topn,newdata=valid[,3:ncol(valid)],ncomp=2,type = "prob", prob = TRUE)
+prob<-predict.model[["predict"]]
+```
+
+
+```{r}
+prob.bin=data.frame()
+group1="Younger"
+group2="Older"
+#group3="4+ years"
+for (i in 1:nrow(prob)){
+  #g=which.max(sqrt(prob[i,,1]^2+prob[i,,2]^2))
+  g1=which.max(prob[i,,1])
+  g2=which.max(prob[i,,2])#+prob[i,,2]+prob[i,,3])
+  g1plus2=which.max(prob[i,,1]+prob[i,,2])
+  g1sqrt2=which.max(sqrt(prob[i,,1]^2+prob[i,,2]^2))
+  if (g1==1){
+    prob.bin[i,1]=group1
+    }else if (g1==2) {
+    prob.bin[i,1]=group2
+    # }else if (g1==3){
+    # prob.bin[i,1]=group3
+    }
+  if (g2==1){
+    prob.bin[i,2]=group1
+    }else if (g2==2) {
+    prob.bin[i,2]=group2
+    # }else if (g2==3){
+    # prob.bin[i,2]=group3
+    }
+  if (g1plus2==1){
+    prob.bin[i,3]=group1
+    }else if (g1plus2==2) {
+    prob.bin[i,3]=group2
+    # }else if (g1plus2==3){
+    # prob.bin[i,3]=group3
+    }
+      if (g1sqrt2==1){
+    prob.bin[i,4]=group1
+    }else if (g1sqrt2==2) {
+    prob.bin[i,4]=group2
+  #   }else if (g1sqrt2==3){
+  #   prob.bin[i,4]=group3
+   }
+}
+colnames(prob.bin)=c('prediction1','prediction2','prediction1+2','prediction1s2')
+prob.bin[,5:6]=valid[,1:2]
+
+
+
+
+```

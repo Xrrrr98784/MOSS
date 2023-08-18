@@ -1,0 +1,84 @@
+画ranking的图
+```{r}
+data.path="~/OneDrive - The Ohio State University/Rui Xu-Research/Bourbon study II 2021S-/Data Archive"
+data.file="LC pos Features CV0.3 SN3 INT10000 proof"
+permutation=1000
+setwd(paste(data.path,"/",data.file,sep=""))
+file.name="all-plsda-1000-1408"
+load(paste(data.path,"/",data.file,"/ranking method svm class method plsda ",permutation," iterations with 1408 compounds proof.rda",sep=""))
+auc.svm=result$auc.list
+ave.svm=as.data.frame(rowMeans(auc.svm,2))
+ave.svm=ave.svm[-1,]
+load(paste(data.path,"/",data.file,"/ranking method rf class method plsda ",permutation," iterations with 1408 compounds proof.rda",sep=""))
+auc.rf=result$auc.list
+ave.rf=as.data.frame(rowMeans(auc.rf,2))
+ave.rf=ave.rf[-1,]
+load(paste(data.path,"/",data.file,"/ranking method plsda class method plsda ",permutation," iterations with 1408 compounds proof.rda",sep=""))
+auc.plsda=result$auc.list
+ave.plsda=as.data.frame(rowMeans(auc.plsda,2))
+ave.plsda=ave.plsda[-1,]
+load(paste(data.path,"/",data.file,"/ranking method roc class method plsda ",permutation," iterations with 1408 compounds proof.rda",sep=""))
+auc.roc=result$auc.list
+ave.roc=as.data.frame(rowMeans(auc.roc,2))
+ave.roc=ave.roc[-1,]
+load(paste(data.path,"/",data.file,"/ranking method ttest class method plsda ",permutation," iterations with 1408 compounds proof.rda",sep=""))
+auc.ttest=result$auc.list
+ave.ttest=as.data.frame(rowMeans(auc.ttest,2))
+ave.ttest=ave.ttest[-1,]
+
+
+# ave.rf=ave.plsda
+# ave.roc=ave.plsda
+#ave.ttest=ave.plsda
+#   ave.ttest=matrix(0,1405,1)
+#   colnames(ave.ttest)=c("ave.ttest")
+#   ave.svm=matrix(0,1405,1)
+#   colnames(ave.svm)=c("ave.svm")
+ave=as.data.frame(cbind(1:1405,ave.plsda,ave.rf,ave.roc,ave.svm,ave.ttest))
+
+# lines(x=c(which.max(ave),which.max(ave)), y=c(0.5,max(ave)), type = "l", lty = "dashed",col="red",lwd=2)
+# lines(x=c(-50,which.max(ave)), y=c(max(ave),max(ave)), type = "l", lty = "dashed",col="red",lwd=2)
+# text(x=c(which.max(ave)-50,20), y=c(0.99*min(ave)+0.01*max(ave),0.95*max(ave)+0.05*min(ave)),labels=c(which.max(ave),round(max(ave),3)),col="red",cex=1)
+```
+
+```{r}
+library(tidyr)
+ave.longer<- ave%>% 
+  pivot_longer(cols=c("ave.ttest","ave.roc","ave.plsda","ave.rf","ave.svm"),names_to ="group",values_to="ave")
+library(ggplot2)
+P=ggplot(ave.longer, aes(x=V1,y=ave,col=group)) +
+  geom_line()+
+  # geom_segment(aes(x = 1-draw.performance[4,1], y = draw.performance[4,2], xend = 1-draw.performance[5,1], yend = draw.performance[5,2]))+
+  # geom_segment(aes(x = 1-draw.performance[6,1], y = draw.performance[6,2], xend = 1-draw.performance[5,1], yend = draw.performance[5,2]))+
+  # geom_segment(aes(x = 1-draw.performance[3,1], y = draw.performance[3,2], xend = 1-draw.performance[2,1], yend = draw.performance[2,2]),color="lightblue")+
+  scale_color_discrete(name = "Group",
+                       labels = c("PLSDA",
+                                  "RF",
+                                  "ROC",
+                                  "SVM",
+                                  "TTEST")) +
+  labs(y = "Area Under Curve(AUC)",x="Feature #") +
+    theme(plot.title = element_text(color="black",size=15),
+          axis.title.x=element_text(size=15),
+          axis.title.y=element_text(size=15),
+          panel.background = element_rect(fill = "white", colour="grey50"),
+          axis.text=element_text(size=12),
+          legend.title = element_text(colour="black", size=12),
+          legend.text = element_text(colour="black", size=12),
+          legend.position="top")
+
+```
+
+
+```{r}
+library(ggplot2)
+ggsave(paste(data.path,"/",data.file,"/all-plsda-1000-1048.png",sep=""), plot = P,width = 11,height = 4)
+```
+
+
+
+
+
+
+
+

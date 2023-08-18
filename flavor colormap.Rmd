@@ -1,0 +1,41 @@
+```{r}
+library(ggplot2)
+library(ggdendro)
+library(tidyr)
+library(grid)
+setwd("~/OneDrive - The Ohio State University/Rui Xu-Research/Bourbon study II 2021S-/Data Archive")
+color=read.csv("flavor colormap.csv")
+
+color_matrix <- as.matrix(color[, -1])
+rownames(color_matrix) <- color$Name
+color_dendro <- as.dendrogram(hclust(d = dist(x = color_matrix)))
+color_order <- order.dendrogram(color_dendro)
+
+color.draw=color %>%
+  pivot_longer(-Name,names_to="Flavor", values_to="Value")
+
+color.draw$Name <- factor(x = color.draw$Name,
+                               levels = color$Name[color_order], 
+                               ordered = TRUE)
+
+palette <- c("white", "blue")
+
+dendro_plot <- ggdendrogram(data = color_dendro, rotate = TRUE)
+
+p=ggplot(color.draw, aes(Name, Flavor, fill = Value)) +
+  geom_tile(aes(width=1,height=1)) +
+  scale_fill_gradientn(colors = palette)+
+  theme(strip.background = element_blank(), axis.text.x = element_text(angle = 45,vjust=0.3,size=6), axis.text.y = element_text(size=10))
+p
+#grid.newpage()
+#print(heatmap_plot)
+      #vp = viewport(x = 0.4, y = 0.5, width = 0.8, height = 1.0))
+#print(dendro_plot, 
+      #vp = viewport(x = 1.5, y = 0.43, width = 1.5, height = 0.92))
+
+```
+
+```{r}
+ggsave("flavor colormap.ppt.png", plot = p,width = 14,height = 4)
+```
+
